@@ -7,8 +7,9 @@
 #               ability to collect, work with, and clean a data set.            #
 #################################################################################
 
-# Import useful libraries
+# Import libraries
 library(dplyr)
+
 
 ###############
 # IMPORT DATA #
@@ -23,7 +24,7 @@ x_test <- read.table("./test/X_test.txt")
 y_test <- read.table("./test/Y_test.txt")
 subject_test <- read.table("./test/subject_test.txt")
 
-# get features and activity labels
+# read features and activity labels
 features <- read.table("features.txt")
 activities <- read.table("activity_labels.txt")
 
@@ -31,13 +32,8 @@ activities <- read.table("activity_labels.txt")
 ##################################
 # USE DESCRIPTIVE VARIABLE NAMES #
 ##################################
-# clean up the current variable names
 features <- features[,2] %>% gsub("\\()", "", .) %>% gsub(",", "-", .)
-feature_headers <- make.names(features, unique = T, allow_ = TRUE)
-#features <- features[,2] 
-#features <- gsub("\\()", "", features)
-#features <- gsub(",", "-", features)
-#feature_headers <- make.names(features, unique = T, allow_ = TRUE)
+feature_headers <- make.names(features, unique = T, allow_ = TRUE); rm(features)
 
 colnames(x_train) <- feature_headers
 colnames(y_train)[1] <- "activity"
@@ -51,15 +47,19 @@ colnames(subject_test)[1] <- "subject"
 ################################
 # MERGE TRAINING AND TEST DATA #
 ################################
-x_combined <- bind_rows(x_train, x_test)
+x_combined <- bind_rows(x_train, x_test); 
+rm(x_train); rm(x_test)                                         
 y_combined <- bind_rows(y_train, y_test)
+rm(y_train); rm(y_test)                                         
 subject_combined <- bind_rows(subject_train, subject_test)
+rm(subject_train); rm(subject_test)                             
 full_combined <- bind_cols(subject_combined, y_combined) %>% bind_cols(., x_combined)
+rm(subject_combined); rm(y_combined); rm(x_combined)            
 
 
-################################
-# EXTRACT MEAN AND STD COLUMNS #
-################################
+#############################
+# EXTRACT MEAN AND STD DATA #
+#############################
 full_combined <- select(full_combined, 
                         contains("subject"),
                         contains("activity"),
@@ -67,16 +67,19 @@ full_combined <- select(full_combined,
                         contains("std"))
 
 
-############################################
-# USE DESCRIPTIVE NAMES FOR THE ACTIVITIES #
-############################################
+########################################
+# USE DESCRIPTIVE NAMES FOR ACTIVITIES #
+########################################
 activities2 <- activities[match(full_combined$activity, activities$V1),2]
-full_combined$activity <- activities2; rm(activities2)
+full_combined$activity <- activities2; 
+rm(activities); rm(activities2)                         
 
-##############################
-# CREATE FINAL TIDY DATA SET #
-##############################
+
+########################
+# CREATE TIDY DATA SET #
+########################
 # create tidy data set with mean of each variable for each activity and each subject
 full_combined_table <- tbl_df(full_combined); rm(full_combined)
-final_tidy_data <- group_by(full_combined_table, subject, activity) %>%
+tidy_data_set <- group_by(full_combined_table, subject, activity) %>%
                    summarise_each(., funs(mean))
+rm(full_combined_table)
